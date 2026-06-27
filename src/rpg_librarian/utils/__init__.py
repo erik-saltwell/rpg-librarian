@@ -4,6 +4,15 @@ from .datetimes import (
     duration_from_perfcounters,
     parse_datetime,
 )
+from .logging_protocol import (
+    CompositeLogger,
+    LoggingProtocol,
+    NullLogger,
+    ProgressTask,
+    StatusHandle,
+    _NullProgress,
+    _NullStatus,
+)
 from .process_runner import run_process
 from .text_fragments import get_fragment
 from .tracer import Tracer, initialize_request, initialize_tracing
@@ -18,4 +27,11 @@ __all__ = [
     "Tracer",
     "initialize_tracing",
     "initialize_request",
+    "CompositeLogger",
+    "LoggingProtocol",
+    "NullLogger",
+    "ProgressTask",
+    "StatusHandle",
+    "_NullProgress",
+    "_NullStatus",
 ]

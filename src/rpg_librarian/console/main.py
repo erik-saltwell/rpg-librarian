@@ -7,12 +7,11 @@ import typer
 from dotenv import load_dotenv
 from rich.console import Console
 
+from ..commands import CommandProtocol
 from ..commands.test_command import TestCommand
-from ..protocols import CommandProtocol, CompositeLogger, LoggingProtocol
-from ..utils import Tracer, common_paths, initialize_request, initialize_tracing
+from ..utils import CompositeLogger, LoggingProtocol, Tracer, common_paths, initialize_request, initialize_tracing
 from .file_logging_protocol import FileLogger
 from .rich_logging_protocol import RichConsoleLogger
-
 
 app = typer.Typer(
     name="rpg-librarian",

@@ -9,7 +9,7 @@ from rich.console import Console
 from rich.table import Table, box
 from rich.traceback import Traceback
 
-from ..protocols import (
+from ..utils import (
     LoggingProtocol,
     ProgressTask,
     StatusHandle,
@@ -72,9 +72,7 @@ class FileLogger(LoggingProtocol):
         self._console.print(table)
         self._flush()
 
-    def report_multicolumn_table(
-        self, headers: list[str], rows: list[list[str]]
-    ) -> None:
+    def report_multicolumn_table(self, headers: list[str], rows: list[list[str]]) -> None:
         table = Table(
             show_header=True,
             show_lines=True,
@@ -99,7 +97,5 @@ class FileLogger(LoggingProtocol):
         yield _NullStatus()
 
     @contextmanager
-    def progress(
-        self, description: str, total: int | None = None
-    ) -> Iterator[ProgressTask]:
+    def progress(self, description: str, total: int | None = None) -> Iterator[ProgressTask]:
         yield _NullProgress()

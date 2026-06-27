@@ -66,9 +66,7 @@ class LoggingProtocol(Protocol):
         """Log a row of key-value data, typically rendered as a table."""
         ...
 
-    def report_multicolumn_table(
-        self, headers: list[str], rows: list[list[str]]
-    ) -> None:
+    def report_multicolumn_table(self, headers: list[str], rows: list[list[str]]) -> None:
         """Log a columnar table with the given headers and rows."""
         ...
 
@@ -80,9 +78,7 @@ class LoggingProtocol(Protocol):
         """Return a context manager providing an active status indicator."""
         ...
 
-    def progress(
-        self, description: str, total: int | None = None
-    ) -> AbstractContextManager[ProgressTask]:
+    def progress(self, description: str, total: int | None = None) -> AbstractContextManager[ProgressTask]:
         """Return a context manager providing an active progress tracker."""
         ...
 
@@ -148,9 +144,7 @@ class NullLogger(LoggingProtocol):
     def report_table_message(self, row_data: dict[str, Any]) -> None:
         return
 
-    def report_multicolumn_table(
-        self, headers: list[str], rows: list[list[str]]
-    ) -> None:
+    def report_multicolumn_table(self, headers: list[str], rows: list[list[str]]) -> None:
         return
 
     def add_break(self, break_count: int = 1) -> None:
@@ -162,9 +156,7 @@ class NullLogger(LoggingProtocol):
         yield _NullStatus()
 
     @contextmanager
-    def progress(
-        self, description: str, total: int | None = None
-    ) -> Iterator[ProgressTask]:
+    def progress(self, description: str, total: int | None = None) -> Iterator[ProgressTask]:
         """Yield a no-op progress handle."""
         yield _NullProgress()
 
@@ -233,9 +225,7 @@ class CompositeLogger(LoggingProtocol):
         for member in self.members:
             member.report_table_message(row_data)
 
-    def report_multicolumn_table(
-        self, headers: list[str], rows: list[list[str]]
-    ) -> None:
+    def report_multicolumn_table(self, headers: list[str], rows: list[list[str]]) -> None:
         for member in self.members:
             member.report_multicolumn_table(headers, rows)
 
@@ -252,9 +242,7 @@ class CompositeLogger(LoggingProtocol):
             yield CompositeStatusHandle(items)
 
     @contextmanager
-    def progress(
-        self, description: str, total: int | None = None
-    ) -> Iterator[ProgressTask]:
+    def progress(self, description: str, total: int | None = None) -> Iterator[ProgressTask]:
         with ExitStack() as stack:
             items: list[ProgressTask] = []
             for member in self.members:

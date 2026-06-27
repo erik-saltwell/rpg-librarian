@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 from dataclasses import KW_ONLY, dataclass
 from time import perf_counter
 
-from ..protocols import CommandProtocol, CommandResult, LoggingProtocol
-from ..utils import Tracer, duration_from_perfcounters
+from ..utils import LoggingProtocol, Tracer, duration_from_perfcounters
+from .command_protocol import CommandProtocol, CommandResult
 
 
 @dataclass

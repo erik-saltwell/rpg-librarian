@@ -6,9 +6,11 @@ readme = "README.md"
 authors = [
     { name = "Erik Saltwell", email = "erik.saltwell@gmail.com" },
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "jinja2>=3.1.0",
+    "litellm>=1.90.0",
+    "marker>=2.1.3",
     "pydantic>=2.13.3",
     "python-dotenv>=1.2.1",
     "rich>=14.2.0",
@@ -20,7 +22,7 @@ dependencies = [
 rpg-librarian = "rpg_librarian.console:main.app"
 
 [build-system]
-requires = ["uv_build>=0.9.25,<0.10.0"]
+requires = ["uv_build>=0.9.25,<0.12"]
 build-backend = "uv_build"
 
 [dependency-groups]
@@ -39,7 +41,7 @@ testpaths = ["tests/unit"]
 addopts = "-q -s"
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 line-length = 120
 
 [tool.ruff.lint]
@@ -53,7 +55,7 @@ indent-style = "space"
 [tool.ty.environment]
 # src/ layout — tell ty where first-party code lives
 root = ["src"]
-python-version = "3.11"
+python-version = "3.12"
 
 [tool.ty.rules]
 # Reasonable signal without going full-strict
