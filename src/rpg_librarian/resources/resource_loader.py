@@ -11,9 +11,5 @@ class ResourceDirectory(StrEnum):
     FRAGMENTS = "fragments"
 
 
-def read_resource_text(
-    directory: ResourceDirectory, filename: str, encoding: str = "utf-8"
-) -> str:
-    return (
-        files(RESOURCE_PACKAGE).joinpath(directory.value, filename).read_text(encoding)
-    )
+def read_resource_text(directory: ResourceDirectory, filename: str, encoding: str = "utf-8") -> str:
+    return files(RESOURCE_PACKAGE).joinpath(directory.value, filename).read_text(encoding)

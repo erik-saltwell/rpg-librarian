@@ -109,9 +109,7 @@ def get_fragment(fragment_id: FragmentID) -> str:
 def get_templated_fragment(fragment_id: FragmentID, context_object: Any) -> str:
     global _loaded_templates
     if fragment_id not in _loaded_templates:
-        _loaded_templates[fragment_id] = _environment.from_string(
-            get_fragment(fragment_id)
-        )
+        _loaded_templates[fragment_id] = _environment.from_string(get_fragment(fragment_id))
     template: jinja2.Template = _loaded_templates[fragment_id]
     context: dict[str, Any] = _object_to_context_dict(context_object)
     result: str = template.render(context)
