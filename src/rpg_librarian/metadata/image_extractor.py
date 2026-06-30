@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import imagehash
 from PIL import ExifTags, Image
 
 from ..catalog.model.image_metadata import ImageMetadata
@@ -21,10 +20,6 @@ def get_image_width(image: Image.Image) -> int:
 
 def get_image_height(image: Image.Image) -> int:
     return image.height
-
-
-def get_hash(image: Image.Image) -> str:
-    return str(imagehash.dhash(image))
 
 
 def get_has_alpha(image: Image.Image) -> bool:
@@ -78,7 +73,6 @@ class ImageMetadataExtractor(MetadataExtractor):
             width=width,
             height=height,
             pixel_count=width * height if width is not None and height is not None else None,
-            hash=get_hash(image) if image else None,
             artists=get_exif_str(image, "Artist") if image else None,
             copyright=get_exif_str(image, "Copyright") if image else None,
             has_alpha=get_has_alpha(image) if image else None,

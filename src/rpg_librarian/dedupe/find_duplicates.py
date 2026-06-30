@@ -1,26 +1,21 @@
 from __future__ import annotations
 
-from ..catalog.model.audio_metadata import AudioMetadata
 from ..catalog.model.catalog import Catalog
 from ..catalog.model.catalog_entry import CatalogEntry
-from ..catalog.model.image_metadata import ImageMetadata
 from ..catalog.model.media_type import MediaType
 from .duplicate_data import DuplicateData
 
 
 def find_duplicates(
     catalog: Catalog,
-    use_perceptual_hash: bool,
     only_find_duplicates_with_shared_name: bool = False,
     only_find_duplicates_with_master_in_drivethrurpg: bool = False,
 ) -> dict[str, DuplicateData]:
     """Return duplicate groups, keyed by the ID of each group's master entry.
 
-    Entries are joined when they have the same media type and their file hashes
-    match.  When ``use_perceptual_hash`` is true, entries are also joined when
-    their perceptual hashes (images) or acoustic fingerprints (audio) match;
-    when false, only the file sha256 is considered.  Joining is transitive so an
-    entry can belong to only one duplicate group.
+    Entries are joined when they have the same media type and their sha256 file
+    hashes match. Joining is transitive so an entry can belong to only one
+    duplicate group.
 
     The master of each group is chosen by narrowing the members through these
     rules in order, each applied to whatever candidates the previous rule left:
@@ -55,24 +50,14 @@ def find_duplicates(
         if left_root != right_root:
             parents[right_root] = left_root
 
-    first_entry_by_hash: dict[tuple[MediaType, str, str], int] = {}
+    first_entry_by_hash: dict[tuple[MediaType, str], int] = {}
     for index, entry in enumerate(entries):
-        if entry.media_type is None:
+        if entry.media_type is None or entry.file_data is None or not entry.file_data.sha256:
             continue
 
-        hashes: list[tuple[str, str]] = []
-        if entry.file_data is not None and entry.file_data.sha256:
-            hashes.append(("sha256", entry.file_data.sha256))
-
-        if use_perceptual_hash:
-            perceptual_hash = _perceptual_hash(entry)
-            if perceptual_hash:
-                hashes.append(("perceptual", perceptual_hash))
-
-        for hash_kind, hash_value in hashes:
-            key = (entry.media_type, hash_kind, hash_value)
-            matching_index = first_entry_by_hash.setdefault(key, index)
-            union(index, matching_index)
+        key = (entry.media_type, entry.file_data.sha256)
+        matching_index = first_entry_by_hash.setdefault(key, index)
+        union(index, matching_index)
 
     members_by_root: dict[int, list[CatalogEntry]] = {}
     for index, entry in enumerate(entries):
@@ -151,27 +136,6 @@ def all_share_filename(group: DuplicateData) -> bool:
     members = [group.master, *group.duplicates]
     filenames = {entry.file_data.filename.casefold() for entry in members if entry.file_data is not None}
     return len(filenames) == 1
-
-
-def _perceptual_hash(entry: CatalogEntry) -> str | None:
-    metadata = entry.media_type_metadata
-    if entry.media_type == MediaType.image and isinstance(metadata, ImageMetadata):
-        return _usable_perceptual_hash(metadata.hash)
-    if entry.media_type == MediaType.audio and isinstance(metadata, AudioMetadata):
-        return _usable_perceptual_hash(metadata.acoustic_fingerprint)
-    return None
-
-
-def _usable_perceptual_hash(value: str | None) -> str | None:
-    """Return the perceptual hash, or None when it carries no signal.
-
-    An all-zero hash collapses unrelated content into one group (e.g. mostly
-    white document images), so we drop it and let the entry fall back to
-    matching on its file sha256 instead.
-    """
-    if not value or set(value) == {"0"}:
-        return None
-    return value
 
 
 def is_in_drivethrurpg(entry: CatalogEntry) -> bool:

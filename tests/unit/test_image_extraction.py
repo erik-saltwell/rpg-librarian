@@ -36,15 +36,6 @@ def test_jpg_pixel_count_equals_width_times_height(fixtures_dir: Path) -> None:
     assert result.pixel_count == result.width * result.height
 
 
-def test_jpg_hash_is_hex_string(fixtures_dir: Path) -> None:
-    extractor = ImageMetadataExtractor(fixtures_dir / "image" / "cover_art.jpg")
-    result = extractor.generate_media_type_specific_metadata()
-    assert isinstance(result, ImageMetadata)
-    assert isinstance(result.hash, str)
-    assert len(result.hash) == 16
-    assert all(c in "0123456789abcdef" for c in result.hash)
-
-
 def test_jpg_has_no_alpha(fixtures_dir: Path) -> None:
     extractor = ImageMetadataExtractor(fixtures_dir / "image" / "cover_art.jpg")
     result = extractor.generate_media_type_specific_metadata()

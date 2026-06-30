@@ -25,7 +25,6 @@ def test_image_metadata_fields_default_to_none() -> None:
         "width": None,
         "height": None,
         "pixel_count": None,
-        "hash": None,
         "artists": None,
         "copyright": None,
         "has_alpha": None,
@@ -60,7 +59,6 @@ def test_image_extractor_reads_a_valid_image(tmp_path: Path) -> None:
     assert metadata.width == 12
     assert metadata.height == 8
     assert metadata.pixel_count == 96
-    assert isinstance(metadata.hash, str)
     assert metadata.has_alpha is True
 
 

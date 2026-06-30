@@ -6,6 +6,10 @@ from rpg_librarian.catalog.model.audio_metadata import AudioMetadata
 from rpg_librarian.metadata.audio_extractor import AudioMetadataExtractor
 
 
+def test_audio_metadata_contains_only_duration() -> None:
+    assert AudioMetadata(duration=None).model_dump() == {"duration": None}
+
+
 def test_wav_returns_audio_metadata(fixtures_dir: Path) -> None:
     extractor = AudioMetadataExtractor(fixtures_dir / "audio" / "button_select.wav")
     result = extractor.generate_media_type_specific_metadata()
@@ -18,13 +22,6 @@ def test_wav_duration_is_positive_float(fixtures_dir: Path) -> None:
     assert isinstance(result, AudioMetadata)
     assert isinstance(result.duration, float)
     assert result.duration > 0
-
-
-def test_wav_acoustic_fingerprint_is_str(fixtures_dir: Path) -> None:
-    extractor = AudioMetadataExtractor(fixtures_dir / "audio" / "button_select.wav")
-    result = extractor.generate_media_type_specific_metadata()
-    assert isinstance(result, AudioMetadata)
-    assert isinstance(result.acoustic_fingerprint, str)
 
 
 def test_mp3_duration_is_positive_float(fixtures_dir: Path) -> None:

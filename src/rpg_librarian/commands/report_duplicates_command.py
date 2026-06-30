@@ -45,7 +45,7 @@ class ReportDuplicatesCommand(BaseCommand):
     def execute_command(self) -> None:
         library = LibraryData(root_folder=self.processing_directory)
         catalog = Catalog.load(library.index_file)
-        duplicate_groups = find_duplicates(catalog, use_perceptual_hash=False)
+        duplicate_groups = find_duplicates(catalog)
         ignored_extensions = {extension.casefold() for extension in self.ignored_master_extensions}
         duplicate_groups = {
             master_id: group

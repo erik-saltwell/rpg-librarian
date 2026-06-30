@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-import acoustid
 from mutagen import File as MutagenFile
 from mutagen import FileType, MutagenError
 from mutagen.easyid3 import EasyID3
@@ -18,14 +17,6 @@ type AudioFile = FileType | EasyID3
 def get_duration(audio_file: Any) -> float | None:
     info = getattr(audio_file, "info", None)
     return round(info.length, 3) if info and hasattr(info, "length") else None
-
-
-def get_fingerprint(file_path: Path) -> str:
-    try:
-        _, fp = acoustid.fingerprint_file(file_path)
-    except acoustid.FingerprintGenerationError:
-        return ""
-    return fp.decode("ascii") if isinstance(fp, bytes) else str(fp)
 
 
 def _open_audio(file_path: Path) -> AudioFile | None:
@@ -46,7 +37,6 @@ def _open_audio(file_path: Path) -> AudioFile | None:
 class AudioMetadataExtractor(MetadataExtractor):
     def __init__(self, file_path: Path):
         self._audio: AudioFile | None = _open_audio(file_path=file_path)
-        self._path = file_path
 
     def extract_value(self, candidate: str) -> str | None:
         if self._audio is None:
@@ -62,4 +52,4 @@ class AudioMetadataExtractor(MetadataExtractor):
         return None
 
     def generate_media_type_specific_metadata(self) -> MediaTypeMetadata:
-        return AudioMetadata(acoustic_fingerprint=get_fingerprint(self._path), duration=get_duration(self._audio))
+        return AudioMetadata(duration=get_duration(self._audio))

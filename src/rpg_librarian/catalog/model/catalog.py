@@ -13,6 +13,28 @@ from ...catalog.model.library_data import LibraryData
 
 _BACKUP_DIR_NAME = ".backup"
 _RETAINED_BACKUPS = 5
+_REMOVED_METADATA_FIELDS = {
+    "audio": "acoustic_fingerprint",
+    "image": "hash",
+}
+
+
+def _reject_catalog_with_removed_metadata(payload: object) -> None:
+    if not isinstance(payload, dict):
+        return
+    entries = payload.get("entries")
+    if not isinstance(entries, list):
+        return
+
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        removed_field = _REMOVED_METADATA_FIELDS.get(entry.get("media_type"))
+        metadata = entry.get("media_type_metadata")
+        if removed_field is not None and isinstance(metadata, dict) and removed_field in metadata:
+            raise ValueError(
+                f"Catalog contains removed metadata field {removed_field!r}; rerun build-catalog to rebuild the index"
+            )
 
 
 def _backup_existing(target_path: Path) -> None:
@@ -58,4 +80,5 @@ class Catalog(BaseModel):
     def load(cls, path: str | Path) -> Catalog:
         target_path = Path(path)
         payload = json.loads(target_path.read_text(encoding="utf-8"))
+        _reject_catalog_with_removed_metadata(payload)
         return cls.model_validate(payload)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -102,3 +103,31 @@ def test_catalog_save_and_load_round_trip(tmp_path: Path) -> None:
     assert loaded_catalog.entries[0].file_data is not None
     assert catalog.entries[0].file_data is not None
     assert loaded_catalog.entries[0].file_data.filepath == catalog.entries[0].file_data.filepath
+
+
+@pytest.mark.parametrize(
+    ("media_type", "removed_field"),
+    [("image", "hash"), ("audio", "acoustic_fingerprint")],
+)
+def test_catalog_load_requires_rebuild_for_removed_metadata(
+    tmp_path: Path, media_type: str, removed_field: str
+) -> None:
+    catalog_path = tmp_path / "index.json"
+    catalog_path.write_text(
+        json.dumps(
+            {
+                "library": {"root_folder": str(tmp_path)},
+                "entries": [
+                    {
+                        "id": "legacy",
+                        "media_type": media_type,
+                        "media_type_metadata": {removed_field: "legacy-value"},
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="rerun build-catalog"):
+        Catalog.load(catalog_path)
