@@ -19,6 +19,14 @@ def enumerate_entries(library: LibraryData) -> Generator[CatalogEntry]:
             yield generate_catalog_entry(Path(dirpath) / filename, library)
 
 
+def count_files(library: LibraryData) -> int:
+    total = 0
+    for _dirpath, dirnames, filenames in os.walk(library.root_folder):
+        dirnames[:] = [d for d in dirnames if not d.startswith(".")]
+        total += len(filenames)
+    return total
+
+
 def generate_catalog(root_folder: Path) -> Catalog:
     library: LibraryData = LibraryData(root_folder=root_folder)
     ensure_directory(library.catalog_folder)

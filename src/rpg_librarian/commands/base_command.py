@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import KW_ONLY, dataclass
+from pathlib import Path
 from time import perf_counter
 
 from ..utils import LoggingProtocol, Tracer, duration_from_perfcounters
@@ -10,9 +11,14 @@ from .command_protocol import CommandProtocol, CommandResult
 
 @dataclass
 class BaseCommand(ABC, CommandProtocol):
+    processing_directory: Path
     _: KW_ONLY
     logger: LoggingProtocol
     tracer: Tracer
+
+    def __post_init__(self) -> None:
+        if not self.processing_directory.is_dir():
+            raise NotADirectoryError(f"path must be a directory: {self.processing_directory}")
 
     @abstractmethod
     def name(self) -> str: ...

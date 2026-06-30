@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from importlib.metadata import PackageNotFoundError, metadata
 from importlib.metadata import version as dist_version
+from pathlib import Path
 
 import typer
 from dotenv import load_dotenv
 from rich.console import Console
 
 from ..commands import CommandProtocol
+from ..commands.build_catalog_command import BuildCatalogCommand
+from ..commands.clean_command import CleanCommand
 from ..commands.test_command import TestCommand
 from ..utils import CompositeLogger, LoggingProtocol, Tracer, common_paths, initialize_request, initialize_tracing
 from .file_logging_protocol import FileLogger
@@ -34,10 +37,32 @@ def create_logger() -> tuple[LoggingProtocol, Tracer]:
 
 
 @app.command("test")
-def test() -> None:
+def test(
+    path: Path = typer.Argument(Path.cwd, help="Library folder to operate on."),
+) -> None:
     """Simple smoke command."""
     logger, tracer = create_logger()
-    command: CommandProtocol = TestCommand(logger=logger, tracer=tracer)
+    command: CommandProtocol = TestCommand(path, logger=logger, tracer=tracer)
+    command.execute()
+
+
+@app.command("clean")
+def clean(
+    processing_directory: Path = typer.Argument(Path("/mnt/windows/rpg"), help="Library folder to clean."),
+) -> None:
+    """Remove junk files and folders from the library."""
+    logger, tracer = create_logger()
+    command: CommandProtocol = CleanCommand(processing_directory, logger=logger, tracer=tracer)
+    command.execute()
+
+
+@app.command("build-catalog")
+def build_catalog(
+    processing_directory: Path = typer.Argument(Path("/mnt/windows/rpg"), help="Library folder to catalog."),
+) -> None:
+    """Build the catalog for the library."""
+    logger, tracer = create_logger()
+    command: CommandProtocol = BuildCatalogCommand(processing_directory, logger=logger, tracer=tracer)
     command.execute()
 
 

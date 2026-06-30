@@ -5,7 +5,29 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "--test",
+            "name": "build",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "rpg_librarian",
+            "console": "integratedTerminal",
+            "args": [
+                "build-catalog",
+                "/mnt/windows/rpg/",
+            ]
+        },
+        {
+            "name": "clean",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "rpg_librarian",
+            "console": "integratedTerminal",
+            "args": [
+                "clean",
+                "/mnt/windows/rpg/",
+            ]
+        },
+        {
+            "name": "test",
             "type": "debugpy",
             "request": "launch",
             "module": "rpg_librarian",
