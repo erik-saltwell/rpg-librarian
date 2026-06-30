@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import stat
+import sys
 
 import pytest
 
@@ -9,7 +10,10 @@ from rpg_librarian.catalog.actions.generate_catalog import enumerate_entries
 from rpg_librarian.catalog.model.library_data import LibraryData
 
 
-@pytest.mark.skipif(os.getuid() == 0, reason="chmod restrictions have no effect as root")
+@pytest.mark.skipif(
+    sys.platform == "win32" or os.getuid() == 0,
+    reason="requires POSIX read-permission semantics and a non-root user",
+)
 def test_enumerate_entries_unreadable_file_records_error_and_continues(tmp_path) -> None:
     readable = tmp_path / "readable.txt"
     readable.write_text("hello", encoding="utf-8")

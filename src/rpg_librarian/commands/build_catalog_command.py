@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from time import perf_counter
 
-from ..catalog.actions.generate_catalog import count_files, enumerate_entries
+from ..catalog.actions.generate_catalog import build_reuse_index, list_library_files, resolve_entry
 from ..catalog.model.catalog import Catalog
 from ..catalog.model.catalog_entry import CatalogEntry
 from ..catalog.model.library_data import LibraryData
@@ -38,14 +38,19 @@ class BuildCatalogCommand(BaseCommand):
         library: LibraryData = LibraryData(root_folder=self.processing_directory)
         ensure_directory(library.catalog_folder)
 
-        total_files: int = count_files(library)
+        # One walk feeds both the progress total and the iteration, so the bar can
+        # never stall short of (or overshoot) 100% by walking the tree twice.
+        files = list_library_files(library)
+        reusable = build_reuse_index(library)
+        total_files: int = len(files)
         error_count: int = 0
         entries: list[CatalogEntry] = []
         durations_by_media_type: dict[str, list[float]] = defaultdict(list)
 
         with self.logger.progress(_progress_description(error_count), total=total_files) as task:
             start = perf_counter()
-            for entry in enumerate_entries(library):
+            for file_path in files:
+                entry = resolve_entry(file_path, library, reusable)
                 elapsed = perf_counter() - start
 
                 media_type_label: str = entry.media_type.value if entry.media_type else "unknown"
@@ -58,6 +63,10 @@ class BuildCatalogCommand(BaseCommand):
                 task.advance(1)
 
                 start = perf_counter()
+
+            # Reaching here means no exception escaped the loop, so every file was
+            # processed; snap the bar to 100% in case advances and total ever drift.
+            task.set_completed(total_files)
 
         catalog: Catalog = Catalog(library=library, entries=entries)
         catalog.save(library.index_file)

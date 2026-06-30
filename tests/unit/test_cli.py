@@ -23,6 +23,10 @@ def test_help() -> None:
     result = runner.invoke(app, ["--help"], color=False)
     assert result.exit_code == 0
     assert "Usage" in result.output
+    assert "report-duplicates" in result.output
+    assert "delete-duplicates" in result.output
+    assert "extract-errors" in result.output
+    assert "prune-catalog" in result.output
 
 
 def test_version() -> None:

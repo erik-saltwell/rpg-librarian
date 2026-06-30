@@ -9,6 +9,7 @@ from pydantic import BaseModel
 class _KnownNames(StrEnum):
     catalog_dir = ".catalog"
     index_file = "index.json"
+    text_fragments_dir = "text_fragments"
 
 
 class LibraryData(BaseModel):
@@ -21,3 +22,7 @@ class LibraryData(BaseModel):
     @property
     def index_file(self) -> Path:
         return self.catalog_folder / _KnownNames.index_file
+
+    @property
+    def text_fragments_folder(self) -> Path:
+        return self.catalog_folder / _KnownNames.text_fragments_dir

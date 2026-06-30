@@ -11,6 +11,10 @@ from rich.console import Console
 from ..commands import CommandProtocol
 from ..commands.build_catalog_command import BuildCatalogCommand
 from ..commands.clean_command import CleanCommand
+from ..commands.delete_duplicates_command import DeleteDuplicatesCommand
+from ..commands.extract_errors_command import ExtractErrorsCommand
+from ..commands.prune_catalog_command import PruneCatalogCommand
+from ..commands.report_duplicates_command import ReportDuplicatesCommand
 from ..commands.test_command import TestCommand
 from ..utils import CompositeLogger, LoggingProtocol, Tracer, common_paths, initialize_request, initialize_tracing
 from .file_logging_protocol import FileLogger
@@ -63,6 +67,54 @@ def build_catalog(
     """Build the catalog for the library."""
     logger, tracer = create_logger()
     command: CommandProtocol = BuildCatalogCommand(processing_directory, logger=logger, tracer=tracer)
+    command.execute()
+
+
+@app.command("report-duplicates")
+def report_duplicates(
+    processing_directory: Path = typer.Argument(
+        Path("/mnt/windows/rpg"), help="Library folder whose catalog should be analyzed."
+    ),
+) -> None:
+    """Find duplicate catalog entries and write a report without deleting files."""
+    logger, tracer = create_logger()
+    command: CommandProtocol = ReportDuplicatesCommand(processing_directory, logger=logger, tracer=tracer)
+    command.execute()
+
+
+@app.command("delete-duplicates")
+def delete_duplicates(
+    processing_directory: Path = typer.Argument(
+        Path("/mnt/windows/rpg"), help="Library folder whose duplicate files should be deleted."
+    ),
+) -> None:
+    """Delete duplicate files found in the catalog, keeping each group's master."""
+    logger, tracer = create_logger()
+    command: CommandProtocol = DeleteDuplicatesCommand(processing_directory, logger=logger, tracer=tracer)
+    command.execute()
+
+
+@app.command("prune-catalog")
+def prune_catalog(
+    processing_directory: Path = typer.Argument(
+        Path("/mnt/windows/rpg"), help="Library folder whose catalog should be pruned."
+    ),
+) -> None:
+    """Remove catalog entries that have errors or whose file no longer exists on disk."""
+    logger, tracer = create_logger()
+    command: CommandProtocol = PruneCatalogCommand(processing_directory, logger=logger, tracer=tracer)
+    command.execute()
+
+
+@app.command("extract-errors")
+def extract_errors(
+    processing_directory: Path = typer.Argument(
+        Path("/mnt/windows/rpg"), help="Library folder whose catalog errors should be extracted."
+    ),
+) -> None:
+    """Write a simplified report of catalog entries that contain errors."""
+    logger, tracer = create_logger()
+    command: CommandProtocol = ExtractErrorsCommand(processing_directory, logger=logger, tracer=tracer)
     command.execute()
 
 

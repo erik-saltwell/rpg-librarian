@@ -26,6 +26,11 @@ def should_clean(trial_path: Path) -> bool:
         else:
             return False
     else:
+        try:
+            if trial_path.stat().st_size == 0:
+                return True
+        except OSError:
+            return False
         if trial_path.name in _files_to_clean:
             return True
         else:
@@ -68,3 +73,20 @@ class CleanCommand(BaseCommand):
                 if should_clean(file_path):
                     self.logger.report_message(f"Removing file: {file_path}")
                     file_path.unlink()
+
+        self._remove_empty_directories()
+
+    def _remove_empty_directories(self) -> None:
+        # Walk bottom-up so emptiness cascades: a directory left holding only
+        # now-removed empty subdirectories is itself removed in the same pass.
+        for dirpath, _dirnames, _filenames in os.walk(self.processing_directory, topdown=False):
+            directory = Path(dirpath)
+            if directory == self.processing_directory:
+                continue  # never remove the root being cleaned
+            try:
+                next(directory.iterdir())
+            except StopIteration:
+                self.logger.report_message(f"Removing empty directory: {directory}")
+                directory.rmdir()
+            except OSError:
+                continue

@@ -2,8 +2,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from PIL import Image
+
 from rpg_librarian.catalog.model.image_metadata import ImageMetadata
 from rpg_librarian.metadata.image_extractor import ImageMetadataExtractor
+
+
+def test_decompression_bomb_guard_is_disabled() -> None:
+    # Importing the extractor must lift Pillow's pixel limit so that
+    # legitimately huge maps/posters in the trusted library still extract.
+    assert Image.MAX_IMAGE_PIXELS is None
 
 
 def test_jpg_returns_image_metadata(fixtures_dir: Path) -> None:

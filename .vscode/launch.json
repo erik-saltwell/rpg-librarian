@@ -5,6 +5,50 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "prune-catalog",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "rpg_librarian",
+            "console": "integratedTerminal",
+            "args": [
+                "prune-catalog",
+                "c:\\rpg",
+            ]
+        },
+        {
+            "name": "extract-errors",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "rpg_librarian",
+            "console": "integratedTerminal",
+            "args": [
+                "extract-errors",
+                "c:\\rpg",
+            ]
+        },
+        {
+            "name": "report-duplicates",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "rpg_librarian",
+            "console": "integratedTerminal",
+            "args": [
+                "report-duplicates",
+                "c:\\rpg",
+            ]
+        },
+        {
+            "name": "delete-duplicates",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "rpg_librarian",
+            "console": "integratedTerminal",
+            "args": [
+                "delete-duplicates",
+                "c:\\rpg",
+            ]
+        },
+        {
             "name": "build",
             "type": "debugpy",
             "request": "launch",
@@ -12,7 +56,7 @@
             "console": "integratedTerminal",
             "args": [
                 "build-catalog",
-                "/mnt/windows/rpg/",
+                "c:\\rpg",
             ]
         },
         {
@@ -23,7 +67,7 @@
             "console": "integratedTerminal",
             "args": [
                 "clean",
-                "/mnt/windows/rpg/",
+                "c:\\rpg",
             ]
         },
         {

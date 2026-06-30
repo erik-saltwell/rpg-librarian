@@ -28,13 +28,23 @@ class BaseCommand(ABC, CommandProtocol):
 
     def execute(self) -> CommandResult:
         start_counter = perf_counter()
+        error: Exception | None = None
         try:
             self.execute_command()
-        except Exception as e:
-            self.tracer.log_exception(e, self.name())
-            self.logger.report_exception(self.name(), e)
-            return CommandResult.FAILURE
+        except Exception as caught_error:
+            error = caught_error
+
         end_counter = perf_counter()
-        self.tracer.add_context("cmd_duration", duration_from_perfcounters(start_counter, end_counter))
-        self.tracer.log(self.name())
-        return CommandResult.SUCCESS
+        duration = duration_from_perfcounters(start_counter, end_counter)
+        self.tracer.add_context("cmd_duration", duration)
+
+        if error is not None:
+            self.tracer.log_exception(error, self.name())
+            self.logger.report_exception(self.name(), error)
+            result = CommandResult.FAILURE
+        else:
+            self.tracer.log(self.name())
+            result = CommandResult.SUCCESS
+
+        self.logger.report_message(f"Finished {self.name()} in {duration} seconds")
+        return result

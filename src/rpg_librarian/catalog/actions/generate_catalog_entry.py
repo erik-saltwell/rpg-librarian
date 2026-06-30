@@ -44,6 +44,10 @@ def generate_catalog_entry(file_path: Path, library: LibraryData) -> CatalogEntr
     if extractor is not None:
         try:
             base_metadata = generate_base_metadata(extractor=extractor)
+            # Drop a base-metadata block that holds no values rather than bloating
+            # the catalog with an all-null object.
+            if base_metadata.is_empty():
+                base_metadata = None
         except Exception as e:
             errors.append(f"Failed to generate base metadata: {e}")
 

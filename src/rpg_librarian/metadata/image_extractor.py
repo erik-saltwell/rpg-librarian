@@ -9,6 +9,11 @@ from ..catalog.model.image_metadata import ImageMetadata
 from ..catalog.model.media_type_metadata import MediaTypeMetadata
 from .metadata_extractor import MetadataExtractor
 
+# This catalog indexes a trusted local library, so Pillow's decompression-bomb
+# guard (which raises for images above ~179M pixels as a possible DOS attack) only
+# rejects legitimately huge maps and posters. Disable the limit so they extract.
+Image.MAX_IMAGE_PIXELS = None
+
 
 def get_image_width(image: Image.Image) -> int:
     return image.width

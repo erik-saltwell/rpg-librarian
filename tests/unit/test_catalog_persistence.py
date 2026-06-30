@@ -1,11 +1,68 @@
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 
+import pytest
+
+import rpg_librarian.catalog.model.catalog as catalog_module
 from rpg_librarian.catalog.model.catalog import Catalog
 from rpg_librarian.catalog.model.catalog_entry import CatalogEntry
 from rpg_librarian.catalog.model.library_data import LibraryData
 from rpg_librarian.file_data.model.file_data import FileData
+
+
+def _catalog(root: Path, entry_id: str) -> Catalog:
+    return Catalog(library=LibraryData(root_folder=root), entries=[CatalogEntry(id=entry_id)])
+
+
+def test_first_save_creates_no_backup(tmp_path: Path) -> None:
+    save_path = tmp_path / "catalog.json"
+    _catalog(tmp_path, "first").save(save_path)
+
+    assert not (tmp_path / ".backup").exists()
+
+
+def test_overwriting_save_backs_up_previous_contents(tmp_path: Path) -> None:
+    save_path = tmp_path / "catalog.json"
+    _catalog(tmp_path, "original").save(save_path)
+    original_bytes = save_path.read_bytes()
+
+    _catalog(tmp_path, "updated").save(save_path)
+
+    backups = list((tmp_path / ".backup").glob("catalog-*.json"))
+    assert len(backups) == 1
+    # The backup holds the prior state, while the live file holds the new one.
+    assert backups[0].read_bytes() == original_bytes
+    assert Catalog.load(save_path).entries[0].id == "updated"
+
+
+def test_each_overwrite_adds_a_backup(tmp_path: Path) -> None:
+    save_path = tmp_path / "catalog.json"
+    _catalog(tmp_path, "v1").save(save_path)
+    _catalog(tmp_path, "v2").save(save_path)
+    _catalog(tmp_path, "v3").save(save_path)
+
+    backups = list((tmp_path / ".backup").glob("catalog-*.json"))
+    assert len(backups) == 2
+
+
+def test_retains_only_the_five_newest_backups(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    save_path = tmp_path / "catalog.json"
+
+    # Feed deterministic, strictly increasing timestamps so backups sort in a
+    # known order regardless of the host clock's resolution.
+    clock = iter(datetime(2026, 6, 30, 12, 0, second) for second in range(20))
+    monkeypatch.setattr(catalog_module, "datetime", type("Clock", (), {"now": staticmethod(lambda: next(clock))}))
+
+    # 8 saves create 7 backups (the prior states v0..v6); retention keeps 5.
+    for version in range(8):
+        _catalog(tmp_path, f"v{version}").save(save_path)
+
+    backups = sorted((tmp_path / ".backup").glob("catalog-*.json"))
+    assert len(backups) == 5
+    kept_ids = [Catalog.load(backup).entries[0].id for backup in backups]
+    assert kept_ids == ["v2", "v3", "v4", "v5", "v6"]
 
 
 def test_catalog_save_and_load_round_trip(tmp_path: Path) -> None:
