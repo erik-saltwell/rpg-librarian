@@ -107,12 +107,6 @@ def has_textures_from_mesh(mesh: trimesh.Trimesh) -> bool:
     return isinstance(mesh.visual, trimesh.visual.TextureVisuals)
 
 
-def has_colos_from_mesh(mesh: trimesh.Trimesh) -> bool:
-    return isinstance(mesh.visual, trimesh.visual.TextureVisuals) or (
-        hasattr(mesh.visual, "vertex_colors") and mesh.visual.vertex_colors is not None
-    )
-
-
 def units_from_mesh(file_path: Path) -> str | None:
     return _STL_ASSUMED_UNIT
 
