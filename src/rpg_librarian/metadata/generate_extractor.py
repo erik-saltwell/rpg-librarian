@@ -8,6 +8,7 @@ from .image_extractor import ImageMetadataExtractor
 from .mesh_extractor import MeshMetadataExtractor
 from .metadata_extractor import MetadataExtractor
 from .no_metadata_extractor import NoMetadataExtractor
+from .pdf_extractor import PdfMetadataExtractor
 from .video_extractor import VideoMetadataExtractor
 
 
@@ -21,5 +22,7 @@ def generate_extractor(media_type: MediaType, file_path: Path) -> MetadataExtrac
             return MeshMetadataExtractor(file_path)
         case MediaType.video:
             return VideoMetadataExtractor(file_path)
+        case MediaType.pdf:
+            return PdfMetadataExtractor(file_path)
         case _:
             return NoMetadataExtractor()
