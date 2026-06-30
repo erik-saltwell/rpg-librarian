@@ -8,9 +8,8 @@ from typing import cast
 import pytest
 from PIL import ExifTags, Image
 
-from rpg_librarian.metadata.actions.generate_image_metadata import generate_image_metadata
-from rpg_librarian.metadata.model.image_metadata import ImageMetadata
-from rpg_librarian.metadata.tools.image_extraction import get_exif_str, get_has_alpha
+from rpg_librarian.catalog.model.image_metadata import ImageMetadata
+from rpg_librarian.metadata.image_extractor import ImageMetadataExtractor, get_exif_str, get_has_alpha
 
 
 class _UnloadableImage:
@@ -41,22 +40,23 @@ def test_image_metadata_fields_default_to_none() -> None:
         struct.error("invalid image structure"),
     ],
 )
-def test_generate_image_metadata_returns_empty_for_load_failures(
+def test_image_extractor_raises_for_load_failures(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, error: Exception
 ) -> None:
     monkeypatch.setattr(Image, "open", lambda _: _UnloadableImage(error))
 
-    metadata = generate_image_metadata(tmp_path / "broken-image")
+    with pytest.raises(Exception, match=r"."):
+        ImageMetadataExtractor(tmp_path / "broken-image")
 
-    assert metadata == ImageMetadata()
 
-
-def test_generate_image_metadata_reads_a_valid_image(tmp_path: Path) -> None:
+def test_image_extractor_reads_a_valid_image(tmp_path: Path) -> None:
     image_path = tmp_path / "image.png"
     Image.new("RGBA", (12, 8)).save(image_path)
 
-    metadata = generate_image_metadata(image_path)
+    extractor = ImageMetadataExtractor(image_path)
+    metadata = extractor.generate_media_type_specific_metadata()
 
+    assert isinstance(metadata, ImageMetadata)
     assert metadata.width == 12
     assert metadata.height == 8
     assert metadata.pixel_count == 96

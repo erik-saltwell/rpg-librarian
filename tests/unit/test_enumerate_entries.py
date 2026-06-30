@@ -5,7 +5,7 @@ import stat
 
 import pytest
 
-from rpg_librarian.catalog.actions.enumerate_entries import enumerate_entries
+from rpg_librarian.catalog.actions.generate_catalog import enumerate_entries
 from rpg_librarian.catalog.model.library_data import LibraryData
 
 
