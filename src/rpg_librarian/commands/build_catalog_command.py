@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from collections import defaultdict
-from time import perf_counter
+import os
+from collections.abc import Generator
+from pathlib import Path
 
-from ..catalog.actions.generate_catalog import build_reuse_index, list_library_files, resolve_entry
+from ..catalog.actions.generate_catalog_entry import generate_catalog_entry
 from ..catalog.model.catalog import Catalog
 from ..catalog.model.catalog_entry import CatalogEntry
 from ..catalog.model.library_data import LibraryData
@@ -16,59 +17,50 @@ def _progress_description(error_count: int) -> str:
     return f"Building Catalog ([{color}]{error_count}[/{color}])"
 
 
+def _entry_path(entry: CatalogEntry) -> Path | None:
+    """The source path of an entry, preferring the always-set filepath and falling
+    back to file_data for entries written before filepath existed."""
+    if entry.filepath is not None:
+        return entry.filepath
+    return entry.file_data.filepath if entry.file_data else None
+
+
+def unseen_files(catalog: Catalog) -> Generator[Path]:
+    seen_paths: set[Path] = {path for entry in catalog.entries if (path := _entry_path(entry)) is not None}
+    for dirpath, dirnames, filenames in os.walk(catalog.library.root_folder):
+        dirnames[:] = sorted(d for d in dirnames if not d.startswith("."))
+        for filename in sorted(filenames):
+            file_path = Path(dirpath) / filename
+            if file_path not in seen_paths:
+                yield file_path
+
+
 class BuildCatalogCommand(BaseCommand):
     def name(self) -> str:
         return "build_catalog"
 
-    def _report_timing_stats(self, durations_by_media_type: dict[str, list[float]]) -> None:
-        headers = ["Media Type", "Count", "Total Time (s)", "Avg Time (s)"]
-        rows: list[list[str]] = []
-        ranked_media_types = sorted(
-            durations_by_media_type, key=lambda k: sum(durations_by_media_type[k]), reverse=True
-        )
-        for media_type_label in ranked_media_types:
-            durations = durations_by_media_type[media_type_label]
-            total = sum(durations)
-            average = total / len(durations)
-            rows.append([media_type_label, str(len(durations)), f"{total:.3f}", f"{average:.3f}"])
-
-        self.logger.report_multicolumn_table(headers, rows)
-
     def execute_command(self) -> None:
         library: LibraryData = LibraryData(root_folder=self.processing_directory)
         ensure_directory(library.catalog_folder)
+        catalog: Catalog = Catalog(library=library, entries=[])
+        if library.index_file.exists():
+            catalog: Catalog = Catalog.load(library.index_file)
 
-        # One walk feeds both the progress total and the iteration, so the bar can
-        # never stall short of (or overshoot) 100% by walking the tree twice.
-        files = list_library_files(library)
-        reusable = build_reuse_index(library)
-        total_files: int = len(files)
+        to_process: list[Path] = list(unseen_files(catalog))
         error_count: int = 0
-        entries: list[CatalogEntry] = []
-        durations_by_media_type: dict[str, list[float]] = defaultdict(list)
-
+        counter: int = 1
+        total_files: int = len(to_process)
+        catalog.save(library.index_file, backup=True)  # this first save actually backs up the previous catalog.
         with self.logger.progress(_progress_description(error_count), total=total_files) as task:
-            start = perf_counter()
-            for file_path in files:
-                entry = resolve_entry(file_path, library, reusable)
-                elapsed = perf_counter() - start
-
-                media_type_label: str = entry.media_type.value if entry.media_type else "unknown"
-                durations_by_media_type[media_type_label].append(elapsed)
-
-                entries.append(entry)
+            for file_path in to_process:
+                entry: CatalogEntry = generate_catalog_entry(file_path, catalog.library)
+                catalog.entries.append(entry)
                 if entry.errors:
                     error_count += 1
                     task.set_description(_progress_description(error_count))
+                if counter % 10 == 0:
+                    catalog.save(library.index_file, backup=False)
+                counter += 1
                 task.advance(1)
-
-                start = perf_counter()
-
-            # Reaching here means no exception escaped the loop, so every file was
-            # processed; snap the bar to 100% in case advances and total ever drift.
             task.set_completed(total_files)
-
-        catalog: Catalog = Catalog(library=library, entries=entries)
-        catalog.save(library.index_file)
-
-        self._report_timing_stats(durations_by_media_type)
+        catalog.save(library.index_file, backup=True)

@@ -10,7 +10,8 @@ class BaseMetadata(BaseModel):
     copyright: str | None = None
     genre: str | None = None
     isbn: str | None = None
+    issn: str | None = None
 
     def is_empty(self) -> bool:
         """True when no field carries a value, so the block adds nothing to an entry."""
-        return not any((self.artist, self.title, self.publisher, self.copyright, self.genre, self.isbn))
+        return not any((self.artist, self.title, self.publisher, self.copyright, self.genre, self.isbn, self.issn))

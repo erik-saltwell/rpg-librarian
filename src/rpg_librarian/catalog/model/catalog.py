@@ -70,10 +70,17 @@ class Catalog(BaseModel):
     library: LibraryData
     entries: list[CatalogEntry]
 
-    def save(self, path: str | Path) -> None:
+    def save(self, path: str | Path, backup: bool = True) -> None:
+        """Write the catalog to ``path``, backing up any existing file first.
+
+        Set ``backup=False`` to overwrite in place without snapshotting the prior
+        contents. Incremental per-entry saves during a build use this so a single
+        run produces one backup of the previous catalog rather than flooding the
+        ``.backup`` directory (and evicting that prior catalog) on every entry."""
         target_path = Path(path)
         target_path.parent.mkdir(parents=True, exist_ok=True)
-        _backup_existing(target_path)
+        if backup:
+            _backup_existing(target_path)
         target_path.write_text(json.dumps(self.model_dump(mode="json"), indent=2), encoding="utf-8")
 
     @classmethod

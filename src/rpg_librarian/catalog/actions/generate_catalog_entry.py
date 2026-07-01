@@ -66,6 +66,7 @@ def generate_catalog_entry(file_path: Path, library: LibraryData) -> CatalogEntr
 
     return CatalogEntry(
         id=entry_id,
+        filepath=file_path,
         file_data=file_data,
         mime_type=mime_type,
         media_type=media_type,

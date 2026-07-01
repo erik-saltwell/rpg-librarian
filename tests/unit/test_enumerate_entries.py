@@ -6,15 +6,17 @@ import sys
 
 import pytest
 
-from rpg_librarian.catalog.actions.generate_catalog import enumerate_entries
+from rpg_librarian.catalog.model.catalog import Catalog
 from rpg_librarian.catalog.model.library_data import LibraryData
+from rpg_librarian.commands.build_catalog_command import BuildCatalogCommand
+from rpg_librarian.utils import NullLogger, Tracer
 
 
 @pytest.mark.skipif(
     sys.platform == "win32" or os.getuid() == 0,
     reason="requires POSIX read-permission semantics and a non-root user",
 )
-def test_enumerate_entries_unreadable_file_records_error_and_continues(tmp_path) -> None:
+def test_build_catalog_unreadable_file_records_error_and_continues(tmp_path) -> None:
     readable = tmp_path / "readable.txt"
     readable.write_text("hello", encoding="utf-8")
     unreadable = tmp_path / "locked.txt"
@@ -22,7 +24,8 @@ def test_enumerate_entries_unreadable_file_records_error_and_continues(tmp_path)
     unreadable.chmod(stat.S_IWRITE)  # write-only: no read permission
 
     library_data = LibraryData(root_folder=tmp_path)
-    entries = list(enumerate_entries(library_data))
+    BuildCatalogCommand(tmp_path, logger=NullLogger(), tracer=Tracer()).execute_command()
+    entries = Catalog.load(library_data.index_file).entries
 
     # Restore permissions so tmp_path cleanup works.
     unreadable.chmod(stat.S_IRUSR | stat.S_IWUSR)
@@ -34,7 +37,7 @@ def test_enumerate_entries_unreadable_file_records_error_and_continues(tmp_path)
     assert error_entries[0].file_data is None
 
 
-def test_enumerate_entries_skips_hidden_directories(tmp_path) -> None:
+def test_build_catalog_skips_hidden_directories(tmp_path) -> None:
     visible_dir = tmp_path / "visible"
     visible_dir.mkdir()
     hidden_dir = tmp_path / ".hidden"
@@ -51,6 +54,7 @@ def test_enumerate_entries_skips_hidden_directories(tmp_path) -> None:
 
     library_data = LibraryData(root_folder=tmp_path)
 
-    entries = list(enumerate_entries(library_data))
+    BuildCatalogCommand(tmp_path, logger=NullLogger(), tracer=Tracer()).execute_command()
+    entries = Catalog.load(library_data.index_file).entries
 
     assert [e.file_data.filename if e.file_data else None for e in entries] == ["entry.txt"]

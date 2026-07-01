@@ -9,7 +9,8 @@ _candidate_names: dict[str, list[str]] = {
     "publisher": ["publisher", "organization"],
     "copyright": ["copyright", "year", "date"],
     "genre": ["genre"],
-    "isbn": ["isbn", "issn"],
+    "isbn": ["isbn"],
+    "issn": ["issn"],
 }
 
 
@@ -21,4 +22,5 @@ def generate_base_metadata(extractor: MetadataExtractor) -> BaseMetadata:
         copyright=extractor.extract(_candidate_names["copyright"]),
         genre=extractor.extract(_candidate_names["genre"]),
         isbn=extractor.extract(_candidate_names["isbn"]),
+        issn=extractor.extract(_candidate_names["issn"]),
     )
