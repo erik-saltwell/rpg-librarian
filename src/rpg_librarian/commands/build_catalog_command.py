@@ -26,13 +26,16 @@ def _entry_path(entry: CatalogEntry) -> Path | None:
 
 
 def unseen_files(catalog: Catalog) -> Generator[Path]:
+    total_files: int = 0
     seen_paths: set[Path] = {path for entry in catalog.entries if (path := _entry_path(entry)) is not None}
     for dirpath, dirnames, filenames in os.walk(catalog.library.root_folder):
         dirnames[:] = sorted(d for d in dirnames if not d.startswith("."))
         for filename in sorted(filenames):
+            total_files += 1
             file_path = Path(dirpath) / filename
             if file_path not in seen_paths:
                 yield file_path
+    return
 
 
 class BuildCatalogCommand(BaseCommand):

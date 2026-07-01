@@ -17,6 +17,7 @@ dependencies = [
     "pydantic>=2.13.3",
     "pymediainfo>=7.0.1",
     "pymupdf>=1.28.0",
+    "pytesseract>=0.3.13",
     "python-dotenv>=1.2.1",
     "python-magic>=0.4.27",
     "python-magic-bin>=0.4.14",
